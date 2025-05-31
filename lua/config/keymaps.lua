@@ -35,21 +35,21 @@ vim.keymap.set("n", "<leader>t", function()
   end
 end, { desc = "Print selected lines" })
 
-function send_reg_to_tmux()
-  local command = vim.fn.getreg('"')
-  local tmux_command = "tmux send-keys -t bottom '" .. command .. "'"
+function send_reg_to_tmux(reg_id)
+  local command = vim.fn.getreg(reg_id)
+  local tmux_command = "tmux send-keys -t bottom '" .. command .. "' Enter"
 
   vim.fn.system(tmux_command)
 end
 
 vim.keymap.set("n", "<leader>t", function()
-  vim.cmd("normal! yy")
+  vim.cmd("normal! 0y$")
 
-  send_reg_to_tmux()
+  send_reg_to_tmux('"')
 end, { noremap = true, silent = true })
 
 vim.keymap.set("v", "<leader>t", function()
   vim.cmd("silent normal! y")
 
-  send_reg_to_tmux()
+  send_reg_to_tmux('"')
 end, { noremap = true, silent = true })
