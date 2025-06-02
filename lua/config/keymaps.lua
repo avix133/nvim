@@ -26,29 +26,37 @@ vim.keymap.set("n", "<leader>X", ":.lua<CR>")
 vim.keymap.set("v", "<leader>X", ":lua<CR>")
 vim.keymap.set("n", "<leader>t", "<cmd>")
 
-vim.keymap.set("n", "<leader>t", function()
-  local start_pos = vim.fn.getpos("'<")[2]
-  local end_pos = vim.fn.getpos("'>")[2]
-  for i = start_pos, end_pos do
-    local line = vim.fn.getline(i)
-    print("Line " .. i .. ": " .. line)
-  end
-end, { desc = "Print selected lines" })
-
 function send_reg_to_tmux(reg_id)
-  local command = vim.fn.getreg(reg_id)
-  local tmux_command = "tmux send-keys -t bottom '" .. command .. "' Enter"
+  local tmpfile = "/tmp/nvim_tmux_buffer.sh"
+  local script = vim.fn.getreg(reg_id)
+  if script == nil or script == "" then
+    script = " "
+  end
+  local file = io.open(tmpfile, "w")
+  if file == nil then
+    return
+  end
+  file:write(script)
+  file:close()
 
-  vim.fn.system(tmux_command)
+  local target_pane = "bottom"
+  vim.fn.system(
+    string.format(
+      "tmux load-buffer %s && tmux paste-buffer -t %s && tmux send-keys -t %s Enter",
+      tmpfile,
+      target_pane,
+      target_pane
+    )
+  )
 end
 
-vim.keymap.set("n", "<leader>t", function()
+vim.keymap.set("n", "<C-t>", function()
   vim.cmd("normal! 0y$")
 
   send_reg_to_tmux('"')
 end, { noremap = true, silent = true })
 
-vim.keymap.set("v", "<leader>t", function()
+vim.keymap.set("v", "<C-t>", function()
   vim.cmd("silent normal! y")
 
   send_reg_to_tmux('"')
